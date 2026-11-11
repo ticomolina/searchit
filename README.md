@@ -2,7 +2,7 @@
 
 Juego de buscar y encontrar para chicos, hecho con los libros ilustrados de casa.
 
-- `index.html`: la app completa (los datos de libros, páginas y objetos están en `const BOOKS=` dentro del script).
+- `index.html`: la app completa (los datos de libros, páginas y objetos están en `const BOOKS=` dentro del script)
 - `img/`: las páginas en tamaño grande.
 - `th/`: miniaturas y tapas.
 
