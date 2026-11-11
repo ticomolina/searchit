@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1430">
+<title>Buscá y Encontrá</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Layout: libro de páginas en grilla → juego a pantalla completa (dibujo + bandeja de 10 objetos). Mundo nocturno espacial, un solo tema. */
+:root{
+  --night:#0b1430; --deep:#14204a; --panel:#1c2a5e; --line:#2c3d7c;
+  --star:#ffd23f; --mint:#4fe3b0; --coral:#ff7b5c; --ink:#f4f6ff; --muted:#a8b3dc;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;font-size:14px}
+*,*::before,*::after{box-sizing:border-box}
+img{max-width:100%}
+body{background:var(--night);color:var(--ink);font-family:var(--body);
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+button:focus-visible{outline:3px solid var(--star);outline-offset:2px}
+.sky{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+   radial-gradient(1.5px 1.5px at 12% 18%,#fff8 50%,transparent 51%),
+   radial-gradient(1px 1px at 33% 72%,#fff7 50%,transparent 51%),
+   radial-gradient(2px 2px at 58% 12%,#ffe9a6 50%,transparent 51%),
+   radial-gradient(1px 1px at 76% 44%,#fff8 50%,transparent 51%),
+   radial-gradient(1.5px 1.5px at 90% 82%,#fff6 50%,transparent 51%),
+   radial-gradient(1px 1px at 22% 92%,#fff6 50%,transparent 51%),
+   radial-gradient(1px 1px at 47% 40%,#fff5 50%,transparent 51%),
+   radial-gradient(900px 500px at 85% -10%,#2a3f8f55,transparent 70%),
+   radial-gradient(700px 500px at -10% 110%,#3b2a7a44,transparent 70%);}
+
+/* ---------- HOME ---------- */
+#home{position:relative;z-index:1;min-height:100%;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 40px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,6vw,58px);line-height:.95;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 .lupa{display:inline-block;color:var(--star);transform:rotate(-8deg)}
+.sub{margin:6px 0 0;color:var(--muted);font-size:16px;max-width:52ch}
+.total{font-family:var(--display);font-size:18px;color:var(--muted);display:flex;align-items:center;gap:10px}
+.total b{color:var(--star);font-size:26px;font-variant-numeric:tabular-nums}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}
+.card{position:relative;display:flex;flex-direction:column;gap:10px;text-align:left;padding:8px 8px 12px;border-radius:20px;background:var(--deep);
+  box-shadow:inset 0 0 0 2px var(--line);transition:transform .18s ease,box-shadow .18s}
+.card:hover{transform:translateY(-3px);box-shadow:inset 0 0 0 2px var(--star)}
+.card:active{transform:scale(.97)}
+.card img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:14px;display:block;background:var(--panel)}
+.card .row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 6px}
+.card .num{font-family:var(--display);font-weight:800;font-size:22px;line-height:1}
+.prog{font-family:var(--display);font-weight:800;font-size:16px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.prog b{color:var(--star)}
+.bar{height:8px;border-radius:99px;background:var(--line);margin:0 6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--star);border-radius:99px;box-shadow:0 0 8px #ffd23f88}
+.card .num{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.books{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:22px}
+.book{position:relative;display:flex;flex-direction:column;gap:12px;text-align:left;padding:10px 10px 16px;border-radius:24px;background:var(--deep);
+  box-shadow:inset 0 0 0 2px var(--line),0 10px 0 -4px var(--panel),0 18px 0 -8px var(--line);transition:transform .18s ease,box-shadow .18s}
+.book:hover{transform:translateY(-4px) rotate(-.6deg);box-shadow:inset 0 0 0 2px var(--star),0 10px 0 -4px var(--panel),0 18px 0 -8px var(--line)}
+.book:active{transform:scale(.97)}
+.book img{width:100%;aspect-ratio:4/3;object-fit:cover;object-position:center 30%;border-radius:16px;display:block;background:var(--panel)}
+.book h3{font-family:var(--display);font-weight:800;font-size:24px;line-height:1.05;margin:0;padding:0 6px;text-wrap:balance}
+.book .meta{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:0 6px;color:var(--muted);font-size:15px}
+.book.done::after{content:"★";position:absolute;top:0;right:0;width:52px;height:52px;display:grid;place-items:center;font-size:30px;color:var(--night);background:var(--star);border-radius:50%;box-shadow:0 4px 14px #0008;transform:rotate(12deg)}
+.crumb{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;padding:8px 16px 8px 10px;border-radius:999px;background:var(--deep);box-shadow:inset 0 0 0 2px var(--line);
+  font-family:var(--display);font-weight:800;font-size:18px;color:var(--ink)}
+.crumb svg{width:22px;height:22px}
+.crumb:hover{box-shadow:inset 0 0 0 2px var(--star)}
+.card.done::after{content:"★";position:absolute;top:2px;right:2px;width:44px;height:44px;display:grid;place-items:center;
+  font-size:26px;color:var(--night);background:var(--star);border-radius:50%;box-shadow:0 4px 14px #0008;transform:rotate(12deg)}
+.foot{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:center;color:var(--muted);font-size:16px;padding-top:12px}
+.foot>span{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center}
+.linkbtn{padding:12px 22px;border-radius:999px;box-shadow:inset 0 0 0 2px var(--line);color:var(--ink);background:var(--deep);font-family:var(--display);font-weight:800;font-size:18px}
+.linkbtn:hover{color:var(--ink)}
+.linkbtn.warn{box-shadow:inset 0 0 0 2px var(--coral);color:var(--coral)}
+
+/* ---------- GAME ---------- */
+#game{position:fixed;inset:0;z-index:5;background:var(--night);display:grid;
+  grid-template-columns:1fr auto;grid-template-rows:1fr;
+  padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+#view{position:relative;overflow:hidden;touch-action:none;background:#060b1d;cursor:grab}
+#view.drag{cursor:grabbing}
+#stage{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+#stage img{display:block;max-width:none;-webkit-user-drag:none;pointer-events:none}
+#marks{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.ring{fill:none;stroke:var(--star);stroke-linecap:round;filter:drop-shadow(0 0 6px #ffd23faa);animation:draw .6s ease-out both}
+.ring.halo{stroke:#fff;opacity:.55;animation:draw .6s ease-out both}
+@keyframes draw{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
+.pulse{fill:none;stroke:var(--mint);animation:pulse 1.6s ease-out 2}
+@keyframes pulse{0%{opacity:0;transform:scale(2.4)}30%{opacity:1}100%{opacity:0;transform:scale(1)}}
+
+.hud{position:absolute;left:10px;right:10px;top:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;pointer-events:none;z-index:3}
+.hud>*{pointer-events:auto}
+.pill{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:999px;background:#0b1430cc;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:inset 0 0 0 2px #ffffff1a}
+.ibtn{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--panel);box-shadow:inset 0 0 0 2px #ffffff22}
+.ibtn:active{transform:scale(.92)}
+.ibtn svg{width:26px;height:26px}
+.count{font-family:var(--display);font-weight:800;font-size:22px;padding:0 8px;font-variant-numeric:tabular-nums}
+.count b{color:var(--star)}
+.zoom{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:8px;z-index:3}
+.hint{background:var(--star);color:var(--night);box-shadow:0 4px 14px #0006}
+.hint.wait{opacity:.45}
+
+.toast{position:absolute;left:50%;top:70px;transform:translate(-50%,-10px);opacity:0;transition:.25s;z-index:4;pointer-events:none;
+  font-family:var(--display);font-weight:800;font-size:clamp(20px,3.4vw,30px);padding:8px 20px;border-radius:18px;background:var(--ink);color:var(--night);
+  box-shadow:0 8px 24px #0009;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast.good{background:var(--mint)}
+
+#tray{background:var(--deep);box-shadow:inset 2px 0 0 var(--line);display:grid;gap:8px;align-content:center;justify-content:center;
+  --chip:64px;grid-template-columns:repeat(2,var(--chip));padding:10px}
+.chip{position:relative;width:var(--chip);height:var(--chip);border-radius:16px;background-color:#fff;background-repeat:no-repeat;
+  box-shadow:0 0 0 3px var(--panel),0 3px 0 3px #0005;transition:transform .15s}
+.chip:active{transform:scale(.93)}
+.chip.wig{animation:wig .5s}
+@keyframes wig{25%{transform:rotate(-8deg)}50%{transform:rotate(7deg)}75%{transform:rotate(-4deg)}}
+.chip.found{box-shadow:0 0 0 3px var(--star),0 3px 0 3px #0005}
+.chip.found::before{content:"";position:absolute;inset:0;border-radius:16px;background:#0b143099}
+.chip.found::after{content:"★";position:absolute;inset:0;display:grid;place-items:center;font-size:calc(var(--chip)*.5);color:var(--star);
+  text-shadow:0 2px 6px #000a;animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{from{transform:scale(0) rotate(-90deg)}to{transform:scale(1)}}
+
+@media (orientation:portrait){
+  #game{grid-template-columns:1fr;grid-template-rows:1fr auto}
+  #tray{box-shadow:inset 0 2px 0 var(--line)}
+}
+
+.burst{position:absolute;pointer-events:none;z-index:2;font-size:22px;color:var(--star);animation:fly .8s ease-out forwards}
+@keyframes fly{from{opacity:1;transform:translate(0,0) scale(.6)}to{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.2) rotate(140deg)}}
+.miss{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;border:3px solid #ffffffaa;pointer-events:none;z-index:2;animation:miss .45s ease-out forwards}
+@keyframes miss{to{transform:scale(1.8);opacity:0}}
+
+.loading{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:22px;color:var(--muted)}
+
+/* ---------- WIN ---------- */
+#win{position:fixed;inset:0;z-index:10;display:grid;place-items:center;background:#060b1dcc;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#confetti{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.winbox{position:relative;text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;padding:26px 28px;border-radius:28px;background:var(--deep);
+  box-shadow:inset 0 0 0 3px var(--star),0 20px 60px #000a;animation:pop .5s cubic-bezier(.3,1.5,.5,1)}
+.winbox .stars{font-size:46px;color:var(--star);letter-spacing:6px;line-height:1}
+.winbox h2{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,42px);margin:0;line-height:1.05;text-wrap:balance}
+.winbox .acts{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.bigbtn{font-family:var(--display);font-weight:800;font-size:22px;padding:12px 24px;border-radius:999px;background:var(--star);color:var(--night);box-shadow:0 4px 0 #b8901b}
+.bigbtn.alt{background:var(--panel);color:var(--ink);box-shadow:0 4px 0 #0b1430}
+.bigbtn:active{transform:translateY(3px);box-shadow:none}
+
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<div class="sky"></div>
+
+<main id="home">
+  <div class="wrap">
+    <div class="head">
+      <div>
+        <h1>Buscá y <span class="lupa">Encontrá</span></h1>
+        <p class="sub" id="sub">Elegí un libro.</p>
+      </div>
+      <div class="total">Estrellas <b id="tot">0</b> / <span id="totmax">160</span></div>
+    </div>
+    <button class="crumb" id="libBack" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Todos los libros</button>
+    <div class="books" id="books"></div>
+    <div class="grid" id="grid" hidden></div>
+    <div class="foot">
+      <button class="linkbtn" id="resetBtn" type="button">↺ Reiniciar progreso</button>
+      <span id="resetAsk" hidden>¿Empezar de cero? Se borran todas las estrellas.
+        <button class="linkbtn warn" id="resetYes" type="button">Sí, reiniciar</button>
+        <button class="linkbtn" id="resetNo" type="button">No</button></span>
+    </div>
+  </div>
+</main>
+
+<section id="game" hidden>
+  <div id="view">
+    <div id="stage"><img id="pic" alt=""><svg id="marks"></svg></div>
+    <div class="loading" id="loading">Cargando…</div>
+    <div class="hud">
+      <div class="pill">
+        <button class="ibtn" id="backBtn" type="button" aria-label="Volver al libro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <span class="count"><b id="cnt">0</b>/<span id="cntMax">10</span></span>
+      </div>
+      <button class="ibtn hint" id="hintBtn" type="button" aria-label="Pista">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
+    </div>
+    <div class="zoom">
+      <button class="ibtn" id="zin" type="button" aria-label="Acercar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="ibtn" id="zout" type="button" aria-label="Alejar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
+  <div id="tray"></div>
+</section>
+
+<div id="win" hidden>
+  <canvas id="confetti"></canvas>
+  <div class="winbox">
+    <div class="stars">★★★</div>
+    <h2 id="winTitle">¡Encontraste todo!</h2>
+    <div class="acts">
+      <button class="bigbtn" id="nextBtn" type="button">Siguiente página</button>
+      <button class="bigbtn alt" id="againBtn" type="button">↺ Jugar otra vez</button>
+      <button class="bigbtn alt" id="homeBtn" type="button">Volver al libro</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const BOOKS=[{"id":"espacial","title":"Misión espacial","cover":"th/01.webp","pages":[{"id":"01","w":2400,"h":1339,"items":[{"n":"el cuadro de pingüinos","b":[[19,0,10,14]]},{"n":"el globo terráqueo","b":[[17,32,7,11]]},{"n":"la estrella fugaz","b":[[52,2,9,8]]},{"n":"la iguana","b":[[92.5,10.5,6.5,8]]},{"n":"la lámpara con estrella","b":[[77.5,13,7.5,21]]},{"n":"el gato negro","b":[[17,63,5.5,8]]},{"n":"el marciano de peluche","b":[[94.5,45,5.5,12]]},{"n":"el telescopio","b":[[29,70,11,24]]},{"n":"el autito","b":[[84.5,59,6,6]]},{"n":"la pelota azul con estrellas","b":[[86,72,5.5,10]]}]},{"id":"02","w":2400,"h":1349,"items":[{"n":"la luna","b":[[54.5,12,8.5,15]]},{"n":"el perro robot","b":[[5,61.5,8,16]]},{"n":"el hueso","b":[[12.5,73,5.5,5]]},{"n":"el marciano verde","b":[[19,73,5.5,17]]},{"n":"el bowl de cereales","b":[[0,92.5,10,7.5]]},{"n":"la lámpara roja","b":[[82,16,10,20]]},{"n":"la mano robot","b":[[89.5,36.5,5,9]]},{"n":"la llave inglesa","b":[[88,46,4,7.5]]},{"n":"el dado","b":[[55.5,86.5,4,6]]},{"n":"los lápices de colores","b":[[14,44,10,5.5]]}]},{"id":"03","w":2400,"h":1349,"items":[{"n":"el gato de la pantalla","b":[[18,15,6,23]]},{"n":"el robot con sombrero","b":[[8.5,71,15.5,27]]},{"n":"la serpiente","b":[[86.5,65.5,7.5,12.5]]},{"n":"la nube sonriente","b":[[59,88,10,12]]},{"n":"las galletitas","b":[[57,77.5,8,6]]},{"n":"el botón rojo gigante","b":[[83,79,11.5,17]]},{"n":"el joystick","b":[[52.5,79,6,20]]},{"n":"el globo terráqueo","b":[[38,85,4.5,8.5]]},{"n":"el reloj digital","b":[[17,40.5,7.5,5.5]]},{"n":"el planeta con anillo","b":[[64.5,76.5,6,7]]}]},{"id":"04","w":2400,"h":1340,"items":[{"n":"el cometa","b":[[8.5,3,13,17]]},{"n":"el satélite","b":[[30.5,3.5,15.5,16]]},{"n":"el perro robot","b":[[21,22.5,8.5,14.5]]},{"n":"la brújula","b":[[84.5,43,6.5,11.5]]},{"n":"la bota","b":[[58,68,7.5,12]]},{"n":"la ballena","b":[[70,64.5,10.5,15.5]]},{"n":"el timón","b":[[80.5,66,9.5,16]]},{"n":"el buzón","b":[[86,75,9.5,20]]},{"n":"el caracol","b":[[74,82,7.5,13]]},{"n":"el farol","b":[[4.5,73,6.5,23]]}]},{"id":"05","w":1376,"h":768,"items":[{"n":"el satélite","b":[[74,6,5,6]]},{"n":"la estrella fugaz","b":[[14.5,10,8.5,6]]},{"n":"la araña robot","b":[[2,35.5,5.5,8]]},{"n":"los cristales de colores","b":[[77.5,31,6,9.5]]},{"n":"el ave de fuego","b":[[90,50.5,6.5,11]]},{"n":"el corazón","b":[[25.5,56,10,7.5]]},{"n":"la lagartija","b":[[5,66,7,8]]},{"n":"el pico","b":[[73,77.5,10,10]]},{"n":"el pez fósil","b":[[86,26,11,8]]},{"n":"el arcoíris","b":[[63,86.5,7,6]]}]},{"id":"06","w":2400,"h":1340,"items":[{"n":"el globo aerostático","b":[[42.5,5,5.5,19.5]]},{"n":"el dirigible naranja","b":[[51.5,16.5,5.5,5]]},{"n":"la caja frágil","b":[[5.5,29,6.5,10]]},{"n":"el volcán","b":[[26,42,15,20]]},{"n":"el engranaje azul","b":[[27.5,84,9.5,16]]},{"n":"el paraguas amarillo","b":[[84,66,5,19]]},{"n":"el cohete del dragón","b":[[88,55,10,35]]},{"n":"el ratón de piedra","b":[[53,70,6.5,8.5]]},{"n":"la regadera","b":[[3,59.5,4,6.5]]},{"n":"los planetas de juguete","b":[[70.5,47,8.5,13]]}]},{"id":"07","w":1534,"h":856,"items":[{"n":"la Tierra","b":[[45.5,3,9.5,12]]},{"n":"la nave lunar","b":[[17.5,3,17.5,29]]},{"n":"la pelota de fútbol","b":[[4.5,20.5,2.5,4.5]]},{"n":"el conejo","b":[[10,34,8.5,15]]},{"n":"la cámara de fotos","b":[[8.5,53.5,5.5,7]]},{"n":"el marcianito","b":[[52,21,4,8.5]]},{"n":"la bota","b":[[93.5,21,6,8.5]]},{"n":"la pelota de golf","b":[[44.5,86,4,7]]},{"n":"el diamante","b":[[54.5,70.5,3.5,6]]},{"n":"la caja de herramientas","b":[[65,70.5,8.5,14.5]]}]},{"id":"08","w":1988,"h":1110,"items":[{"n":"la calavera","b":[[15.5,47.5,5.5,8]]},{"n":"el marciano","b":[[76.5,16,4.5,12]]},{"n":"el paracaídas","b":[[66,17.5,10,10.5]]},{"n":"el helicóptero","b":[[70.5,32.5,7.5,9]]},{"n":"los binoculares","b":[[78,49,4.5,6.5]]},{"n":"el termómetro","b":[[46.5,50,3,10.5]]},{"n":"la pelota amarilla","b":[[50,64.5,3,6]]},{"n":"la brújula","b":[[58,79,5,7]]},{"n":"la mariposa","b":[[87.5,66.5,7.5,12.5]]},{"n":"la taza","b":[[69,81.5,9,12]]}]},{"id":"09","w":1886,"h":1053,"items":[{"n":"el dragón amarillo","b":[[17.5,21,7,11]]},{"n":"el unicornio","b":[[80.5,7.5,13.5,19.5]]},{"n":"el paraguas","b":[[69.5,19,5,8]]},{"n":"la nube sonriente","b":[[61,26,10.5,14]]},{"n":"el dinosaurio","b":[[35.5,33.5,3.5,7.5]]},{"n":"el perrito","b":[[54.5,37,3.5,7.5]]},{"n":"el meteorito","b":[[29.5,12,4.5,15]]},{"n":"el cohete","b":[[22.5,2,6.5,10]]},{"n":"el dragón negro","b":[[23,73,7,10]]},{"n":"la botella","b":[[2.5,37,5,15]]}]},{"id":"10","w":1747,"h":975,"items":[{"n":"el pancho","b":[[20,52.5,5,7]]},{"n":"el perro de hielo","b":[[51,22.5,9,15]]},{"n":"el auto de hielo","b":[[63.5,32.5,5,6.5]]},{"n":"el cocodrilo","b":[[83.5,23,12.5,18]]},{"n":"el ratón","b":[[55.5,46.5,5.5,8]]},{"n":"el osito","b":[[33.5,77,8,19]]},{"n":"el helado","b":[[69.5,79.5,5.5,13.5]]},{"n":"el tiburón","b":[[77.5,89,7,8]]},{"n":"el pulpo","b":[[90,78,6,14]]},{"n":"la hormiga","b":[[51,82,4.5,8]]}]},{"id":"11","w":1376,"h":768,"items":[{"n":"los murciélagos","b":[[14.5,6,18.5,18]]},{"n":"el tren","b":[[2.5,54,8,10]]},{"n":"la bicicleta","b":[[14.5,59.5,9,13.5]]},{"n":"el mago","b":[[33.5,60,7.5,19]]},{"n":"el nido","b":[[33.5,29.5,6.5,6.5]]},{"n":"el búho","b":[[87.5,21,4.5,12],[46,72,3,6.5]]},{"n":"el muñeco de nieve","b":[[52,71,3.5,8.5]]},{"n":"el reloj de arena","b":[[95,60,3.5,9.5]]},{"n":"el corazón de piedra","b":[[26.5,89,5.5,9]]},{"n":"la estrella fugaz","b":[[43,5,9,9]]}]},{"id":"12","w":1376,"h":768,"items":[{"n":"el avión de papel","b":[[88,6,8,7.5]]},{"n":"el fantasma","b":[[77,24,12,18]]},{"n":"el unicornio","b":[[94,40,6,10]]},{"n":"el dragón azul","b":[[86,54,6.5,17]]},{"n":"los osos polares","b":[[25.5,53,5.5,5.5]]},{"n":"la zanahoria","b":[[20,57,3.5,5.5]]},{"n":"el gato blanco","b":[[40.5,56,5,11]]},{"n":"el osito","b":[[11.5,64,9.5,13]]},{"n":"el zorro","b":[[0,80.5,7.5,9.5]]},{"n":"la estrella","b":[[66.5,88.5,7.5,8]]}]},{"id":"13","w":2097,"h":1171,"items":[{"n":"la leña","b":[[6,23,10,10]]},{"n":"el cartel de regreso","b":[[90,9.5,6,8]]},{"n":"la oveja","b":[[83,16,4.5,7]]},{"n":"la fogata","b":[[92.5,23,6,9]]},{"n":"la taza","b":[[57.5,35,4.5,8]]},{"n":"los patines","b":[[94,38,6,11.5]]},{"n":"los guantes","b":[[7.5,53,11.5,8]]},{"n":"el gorro de lana","b":[[9.5,68,9.5,17]]},{"n":"el monito","b":[[82.5,62,5.5,19]]},{"n":"el hacha","b":[[58.5,18.5,6.5,13.5]]}]},{"id":"14b","w":1376,"h":768,"items":[{"n":"la mariposa","b":[[17,3.5,3.5,5.5]]},{"n":"el búho","b":[[90.5,5,5.5,13]]},{"n":"el gato negro","b":[[86.5,20,5.5,15]]},{"n":"el cocodrilo","b":[[1,39,5.5,6]]},{"n":"el gorro de lana","b":[[32.5,26,4,9]]},{"n":"la bicicleta","b":[[8,51,9,18]]},{"n":"la pelota de fútbol","b":[[16,66,4,8]]},{"n":"la ovejita","b":[[16.5,82.5,7.5,12]]},{"n":"el zorro","b":[[44,66,6.5,14]]},{"n":"el molinete","b":[[94,63,6,11]]}]},{"id":"15","w":1376,"h":768,"items":[{"n":"la nube","b":[[11,42,8,10.5]]},{"n":"el conejo","b":[[25,34,5,12]]},{"n":"el gato negro","b":[[57,27.5,4.5,18.5]]},{"n":"la mochila","b":[[66.5,50,7.5,16]]},{"n":"el autito rojo","b":[[66,64.5,6,7]]},{"n":"el perrito","b":[[78.5,70,10.5,20.5]]},{"n":"el ratón","b":[[57,87.5,5.5,7.5]]},{"n":"la pelota amarilla","b":[[73,89.5,5.5,8.5]]},{"n":"la brújula","b":[[10,79.5,4.5,6.5]]},{"n":"la media","b":[[16,85.5,7,6.5]]}]},{"id":"16","w":1584,"h":890,"items":[{"n":"el ratón con cereales","b":[[10,6,12.5,15]]},{"n":"el sombrero de vaquero","b":[[21,27,10,13]]},{"n":"el helado","b":[[33,28,4.5,13.5]]},{"n":"el pingüino","b":[[62.5,26,4.5,11.5]]},{"n":"el unicornio","b":[[75,24,8.5,15]]},{"n":"el fantasma","b":[[85,26,10.5,15.5]]},{"n":"la tortuga","b":[[85.5,55,8,13]]},{"n":"el mago","b":[[70,61,7,16]]},{"n":"el perro salchicha","b":[[25,83,11.5,12.5]]},{"n":"la lata","b":[[10.5,84,6.5,13]]}]}]},{"id":"juguetes","title":"¿Dónde están los juguetes?","cover":"th/j-cover.webp","pages":[{"id":"j02","t":"La feria","w":2400,"h":1359,"items":[{"n":"la pelota","b":[[20.5,93.5,4,6.5]]},{"n":"el osito","b":[[39,55,7,15]]},{"n":"el perrito","b":[[17.5,61,6.5,12]]},{"n":"la botella de agua","b":[[50.3,90,3,10]]},{"n":"el autito amarillo","b":[[1,75,6.5,7.5]]},{"n":"la moto","b":[[58.5,65,5,11]]},{"n":"el monopatín","b":[[23,58,7.5,17.5]]},{"n":"el libro","b":[[79,80,6,9]]},{"n":"el cohete","b":[[25.5,26,5,15]]},{"n":"el patito","b":[[60.5,56.5,5,7.5]]},{"n":"el pochoclo","b":[[92.5,64,6.5,9.5],[87.5,55,7,8.5]]},{"n":"las bananas","b":[[75.5,91.5,7,8.5]]},{"n":"el jugo","b":[[83,85,4.5,9.5]]},{"n":"el plato volador","b":[[15,56,6,10]]},{"n":"la jirafa","b":[[8,74.5,5.5,21]]}]},{"id":"j03","t":"La playa","w":2400,"h":1359,"items":[{"n":"la pelota","b":[[71.8,41,3.2,5]]},{"n":"el osito","b":[[3,76,6,12]]},{"n":"el perrito","b":[[56.3,38,4.2,10]]},{"n":"la botella de agua","b":[[52.3,85,3.2,11.5]]},{"n":"el autito amarillo","b":[[83.8,50.5,6.4,8.5]]},{"n":"la moto","b":[[24,61,6,10.5]]},{"n":"el monopatín","b":[[91,43,7,14.5]]},{"n":"el libro","b":[[6.5,54,5,7.5]]},{"n":"el helado","b":[[39,43,3.5,11.5],[94,64,4.5,16.5]]},{"n":"la surfista","b":[[76,23,4.5,10.5]]},{"n":"el velero","b":[[44.8,25.5,2.5,5.5]]},{"n":"el cangrejo","b":[[25.5,87,9.5,13],[55.3,76,3.5,7.5]]},{"n":"la tortuga","b":[[6.3,48,5,6],[64,53,8.5,10]]},{"n":"la isla","b":[[0,23,5.5,9]]},{"n":"el palito helado","b":[[36.3,59,4,7]]},{"n":"el camión","b":[[45,85,6.5,12.5]]}]},{"id":"j04","t":"El bosque","w":2400,"h":1359,"items":[{"n":"la pelota","b":[[10.5,86,3.8,6.5]]},{"n":"el osito","b":[[61,41,5,9.5]]},{"n":"el perrito","b":[[93.5,87,6,11.5]]},{"n":"la botella de agua","b":[[41.8,58.5,2.2,7]]},{"n":"el autito amarillo","b":[[6.5,46.5,4,5]]},{"n":"la moto","b":[[59,67.5,3.8,7.5]]},{"n":"el monopatín","b":[[16,60,4,13.5]]},{"n":"el libro","b":[[83.8,57.8,3.4,5]]},{"n":"el pájaro negro","b":[[71,6,10,11]]},{"n":"la zanahoria","b":[[11.3,61,3,6]]},{"n":"la abeja","b":[[37.3,26.8,2.4,3.6]]},{"n":"el puercoespín","b":[[71,82,8.5,16]]},{"n":"el duende","b":[[84.8,32,3.6,6],[89.3,35,3.4,7],[84.3,41,3,5.5],[92.6,29,3,4.5]]},{"n":"la manzana","b":[[73.5,60.5,3.5,5]]},{"n":"la mariposa","b":[[56.8,37.5,3,5.5]]}]},{"id":"j05","t":"La plaza","w":2400,"h":1359,"items":[{"n":"la pelota","b":[[79.5,33,3.5,5.5]]},{"n":"el osito","b":[[97,77,3,10],[89.5,74,3.5,7]]},{"n":"el perrito","b":[[67,83,4.5,10.5]]},{"n":"la botella de agua","b":[[93.8,73.5,2.2,7]]},{"n":"el autito amarillo","b":[[16.5,32,3,5]]},{"n":"la moto","b":[[12,51,4.5,8.5]]},{"n":"el monopatín","b":[[72,19,3.5,6.5]]},{"n":"el libro","b":[[63,52.5,3.6,5.5]]},{"n":"el perro marrón","b":[[6.5,62,7,11],[87,39.5,6,11.5]]},{"n":"el cochecito","b":[[28.5,24,4.5,9.5]]},{"n":"la manzana","b":[[9,53.5,2.2,4]]},{"n":"la pelota de colores","b":[[7.2,80.5,3,6],[86.8,51.5,3.4,6]]},{"n":"el perro globo","b":[[63,30,5.5,9.5]]},{"n":"el barrilete","b":[[21,2,5.5,10.5],[35.5,59.5,4.5,9.5]]},{"n":"el gato gris","b":[[40.5,6,4.5,6],[89.8,53,5.5,10]]}]},{"id":"j06","t":"El parque de dinosaurios","w":2400,"h":1359,"items":[{"n":"la pelota","b":[[42.5,35,3.5,4.8]]},{"n":"el osito","b":[[31.3,61.5,4.2,10.5]]},{"n":"el perrito","b":[[91,41.5,4.5,10]]},{"n":"la botella de agua","b":[[76.3,89.5,2,7]]},{"n":"el autito amarillo","b":[[22.5,50,3.5,5.5]]},{"n":"la moto","b":[[23,27,3.5,7.5]]},{"n":"el monopatín","b":[[71,22,4,13.5]]},{"n":"el libro","b":[[69.5,78.5,4.5,9]]},{"n":"el triceratops","b":[[13,46,9,13]]},{"n":"el dinosaurio cuello largo","b":[[22.5,33,13,32]]},{"n":"el estegosaurio","b":[[82,85,11.5,13]]},{"n":"el pterodáctilo","b":[[33.5,1,7.5,11]]},{"n":"el dinosaurio verde","b":[[50.5,79.5,7,20]]},{"n":"el dinosaurio naranja","b":[[32.5,79,7,18]]}]},{"id":"j07","t":"El cumpleaños","w":2400,"h":1359,"items":[{"n":"la pelota","b":[[67,47,5,8.5]]},{"n":"el osito","b":[[69,62,6,10.5]]},{"n":"el perrito","b":[[83,32,4.5,8.5]]},{"n":"la botella de agua","b":[[81,20,2.6,6.5]]},{"n":"el autito amarillo","b":[[24.5,71,4.5,7]]},{"n":"la moto","b":[[75,30,4,9.5]]},{"n":"el monopatín","b":[[10,66,5,15]]},{"n":"el libro","b":[[94.3,77,4.8,8.5]]},{"n":"el nene tigre","b":[[32.5,45.5,6,12]]},{"n":"la piñata burrito","b":[[45,0,6,12.5]]},{"n":"los caramelos","b":[[5.5,84,9,14]]},{"n":"la piñata arcoíris","b":[[26,6,11,15]]},{"n":"el pirata","b":[[47.5,22.5,8.5,24]]},{"n":"la torta","b":[[79,9,8,15.5]]},{"n":"la princesa","b":[[86,25.5,6,12],[13.5,30,6,29]]}]},{"id":"j08","t":"La granja","w":2400,"h":1359,"items":[{"n":"la pelota","b":[[93.2,38,3.8,6.5]]},{"n":"el osito","b":[[45,27,5.5,10.5]]},{"n":"el perrito","b":[[62.5,47.5,4.5,10]]},{"n":"la botella de agua","b":[[56.8,32,2,6]]},{"n":"el autito amarillo","b":[[34.5,59,5.5,6.5]]},{"n":"la moto","b":[[87.5,15.5,4,8]]},{"n":"el monopatín","b":[[22,18,6.5,13.5]]},{"n":"el libro","b":[[71.5,56,4,7.5]]},{"n":"la nena con el bol","b":[[68,12,6.5,16]]},{"n":"el ternerito","b":[[11,53,8,17]]},{"n":"las botas amarillas","b":[[14,88,5,10.5]]},{"n":"el tractor","b":[[51,7.5,8,16]]},{"n":"el gato dormido","b":[[32,51,6,7]]},{"n":"el espantapájaros","b":[[48,40.5,5,19]]},{"n":"el chanchito embarrado","b":[[9.5,40,9.5,16],[19.5,40,6.5,15]]}]},{"id":"j09","t":"La selva","w":2400,"h":1359,"items":[{"n":"la pelota","b":[[39.5,40,3.2,5]]},{"n":"el osito","b":[[77.5,21,4.2,8.5]]},{"n":"el perrito","b":[[89.5,85,4,10.5]]},{"n":"la botella de agua","b":[[8,16,1.8,6.5]]},{"n":"el autito amarillo","b":[[1,90,6.5,9]]},{"n":"la moto","b":[[23,91.5,3.4,8]]},{"n":"el monopatín","b":[[89.5,22,3.5,9.5]]},{"n":"el libro","b":[[7.5,26.5,3.6,5]]},{"n":"el tucán","b":[[1.5,50,9,11],[90.5,9,9,12],[60,58.5,7.5,11]]},{"n":"el mono con cámara","b":[[49.5,9,9.5,14.5]]},{"n":"la jirafa","b":[[72,2.5,5.5,13]]},{"n":"la tortuga","b":[[23.5,52,6.5,8.5]]},{"n":"la bota con la rana","b":[[10.5,79.5,6,11]]},{"n":"el loro verde","b":[[26.5,6,5.5,11],[0,32.5,5,8]]},{"n":"el cofre","b":[[31,30,4.5,6.5]]},{"n":"el cartel del tigre","b":[[92.5,23,5,9.5]]}]},{"id":"j10","t":"El jardín","w":2400,"h":1359,"items":[{"n":"la pelota","b":[[9.5,36.5,4.5,7]]},{"n":"el osito","b":[[14.8,25,4.5,10]]},{"n":"el perrito","b":[[87.5,71,5.5,16]]},{"n":"la botella de agua","b":[[41,42.5,2.2,7]]},{"n":"el autito amarillo","b":[[26,66,4,7.5]]},{"n":"la moto","b":[[66.5,81.5,4,8]]},{"n":"el monopatín","b":[[43.5,74.5,4.5,20]]},{"n":"el libro","b":[[96,57,4,8.5]]},{"n":"el sombrero de mago","b":[[17.5,4,5.5,10]]},{"n":"la tarjeta del 3","b":[[11.5,48,4.5,4.5]]},{"n":"la corona","b":[[24.5,7,4.5,4.5],[45.5,3,3.5,4.5]]},{"n":"el dibujo del monstruo","b":[[52.5,1.5,5.5,11]]},{"n":"la mochila con osito","b":[[0,36.5,11,13]]},{"n":"el autito celeste","b":[[82.8,48.5,3.6,5.5]]},{"n":"la pintura volcada","b":[[88.5,58.5,5,10]]}]},{"id":"j11","t":"El supermercado","w":2400,"h":1359,"items":[{"n":"la pelota","b":[[36.5,87,4,7.5]]},{"n":"el osito","b":[[49,53,4.5,9.5]]},{"n":"el perrito","b":[[67,66,6,16]]},{"n":"la botella de agua","b":[[74,58.5,2.3,7]]},{"n":"el autito amarillo","b":[[16.5,56,3.5,7]]},{"n":"la moto","b":[[60.5,40,4.5,7.5]]},{"n":"el monopatín","b":[[0.5,75,5.5,14]]},{"n":"el libro","b":[[3.5,37.5,4,7]]},{"n":"la caja de cereales","b":[[0,56,5.5,10.5]]},{"n":"el chocolate","b":[[48,64,4,4.5]]},{"n":"el carrito rojo","b":[[58.5,65,7,15]]},{"n":"la sandía","b":[[82.5,83,7,15]]},{"n":"la leche","b":[[36.5,62,4,10]]},{"n":"la frutilla","b":[[2,91,2.5,5]]},{"n":"el cereal de la oferta","b":[[73.5,29,4.5,8.5]]},{"n":"la dona","b":[[28,71,3.5,4.5]]}]},{"id":"j12","t":"De vuelta en casa","w":1954,"h":1300,"items":[{"n":"la rana en la bota","b":[[42,24,6,10]]},{"n":"el sombrero de mago","b":[[40.5,44,13,18],[12,75,10,15]]},{"n":"el pochoclo","b":[[51.5,59,9,19]]},{"n":"el cohete","b":[[47,68,10,24]]},{"n":"el plato volador","b":[[39,69,10,13]]},{"n":"el cangrejo","b":[[59.5,75,11,13]]},{"n":"la piñata","b":[[74,68,9,19]]},{"n":"la mariposa","b":[[83.5,72,12,16]]},{"n":"el duende","b":[[69,79,8,18],[79,83,7,16]]},{"n":"el estegosaurio","b":[[56.5,88,11.5,11]]},{"n":"el mono","b":[[0,71,15,19]]},{"n":"el barrilete","b":[[8,88,6,9.5]]},{"n":"los cereales","b":[[19.5,68.5,6,12]]},{"n":"el jugo","b":[[62.5,68,5,10]]},{"n":"el dinosaurio verde","b":[[18,78,10,21],[15.5,60,5,10]]}]}]}];
+
+(function(){
+const PAGES=[];BOOKS.forEach(b=>b.pages.forEach((p,i)=>{p.book=b;p.num=i+1;PAGES.push(p)}));
+const $=id=>document.getElementById(id);
+const KEY='busca-encontra-v1';
+let prog={};
+try{prog=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){prog={}}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(prog))}catch(e){}};
+const found=id=>prog[id]||(prog[id]=[]);
+const label=n=>{const s=n.replace(/^(el|la|los|las)\s+/i,'');return s.charAt(0).toUpperCase()+s.slice(1)};
+
+/* ---------- sound + voice ---------- */
+let ac=null;
+function audio(){if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ac&&ac.state==='suspended')ac.resume();return ac}
+function tone(f,t0,d,type,vol){const a=audio();if(!a)return;const o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.value=f;
+  const t=a.currentTime+t0;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||.18,t+.015);g.gain.exponentialRampToValueAtTime(.001,t+d);
+  o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+.05)}
+const sGood=()=>{[784,988,1175,1568].forEach((f,i)=>tone(f,i*.07,.35,'triangle',.16))};
+const sMiss=()=>{tone(220,0,.18,'sine',.12)};
+const sWin=()=>{[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,i*.12,.4,'triangle',.18))};
+let voice=null;
+function pickVoice(){try{const v=speechSynthesis.getVoices();voice=v.find(x=>/es[-_](AR|419|US|MX)/i.test(x.lang))||v.find(x=>/^es/i.test(x.lang))||null}catch(e){}}
+try{pickVoice();speechSynthesis.onvoiceschanged=pickVoice}catch(e){}
+function say(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=voice?voice.lang:'es-AR';if(voice)u.voice=voice;u.rate=.95;u.pitch=1.15;speechSynthesis.speak(u)}catch(e){}}
+
+/* ---------- home ---------- */
+let BOOK=null;
+const bookStats=bk=>bk.pages.reduce((a,p)=>(a.f+=found(p.id).length,a.n+=p.items.length,a),{f:0,n:0});
+function renderHome(bk){
+  BOOK=bk||null;
+  $('libBack').hidden=!BOOK;$('books').hidden=!!BOOK;$('grid').hidden=!BOOK;
+  if(!BOOK){
+    $('sub').textContent='Elegí un libro. En cada página hay cosas escondidas: acercá con dos dedos y tocá cada una cuando la veas.';
+    const g=$('books');g.innerHTML='';let F=0,N=0;
+    BOOKS.forEach(b=>{const st=bookStats(b);F+=st.f;N+=st.n;
+      const el=document.createElement('button');el.type='button';el.className='book'+(st.f>=st.n?' done':'');
+      el.innerHTML='<img src="'+b.cover+'" alt=""><h3></h3><div class="meta"><span>'+b.pages.length+' páginas</span><span class="prog"><b>'+st.f+'</b> / '+st.n+' ★</span></div><div class="bar"><i style="width:'+(st.f/st.n*100)+'%"></i></div>';
+      el.querySelector('h3').textContent=b.title;
+      el.onclick=()=>{audio();location.hash='b-'+b.id};g.appendChild(el)});
+    $('tot').textContent=F;$('totmax').textContent=N;
+    $('resetBtn').textContent='↺ Reiniciar todo';return;
+  }
+  $('sub').textContent=BOOK.title;
+  const g=$('grid');g.innerHTML='';
+  BOOK.pages.forEach(p=>{
+    const f=found(p.id).length,n=p.items.length,name=p.t||('Página '+p.num);
+    const b=document.createElement('button');b.type='button';b.className='card'+(f>=n?' done':'');
+    b.setAttribute('aria-label',name+', '+f+' de '+n+' encontrados');
+    b.innerHTML='<img src="th/'+p.id+'.webp" alt="" loading="lazy"><div class="row"><span class="num"></span><span class="prog"><b>'+f+'</b>/'+n+'</span></div><div class="bar"><i style="width:'+(f/n*100)+'%"></i></div>';
+    b.querySelector('.num').textContent=name;
+    b.onclick=()=>{audio();location.hash='p-'+p.id};
+    g.appendChild(b);
+  });
+  const st=bookStats(BOOK);$('tot').textContent=st.f;$('totmax').textContent=st.n;
+  $('resetBtn').textContent='↺ Reiniciar este libro';
+}
+$('libBack').onclick=()=>{location.hash=''};
+$('resetBtn').onclick=()=>{$('resetAsk').hidden=false;$('resetBtn').hidden=true};
+$('resetNo').onclick=()=>{$('resetAsk').hidden=true;$('resetBtn').hidden=false};
+$('resetYes').onclick=()=>{if(BOOK)BOOK.pages.forEach(p=>delete prog[p.id]);else prog={};save();$('resetNo').onclick();renderHome(BOOK)};
+
+/* ---------- game ---------- */
+const view=$('view'),stage=$('stage'),pic=$('pic'),marks=$('marks'),tray=$('tray');
+let P=null,cam={s:1,x:0,y:0},base=1,minS=1,maxS=4,VW=0,VH=0,anim=null;
+
+function apply(){stage.style.transform='translate('+cam.x+'px,'+cam.y+'px) scale('+cam.s+')'}
+function clampCam(c){
+  c.s=Math.min(maxS,Math.max(minS,c.s));
+  const w=P.w*c.s,h=P.h*c.s;
+  c.x = w<=VW ? (VW-w)/2 : Math.min(0,Math.max(VW-w,c.x));
+  c.y = h<=VH ? (VH-h)/2 : Math.min(0,Math.max(VH-h,c.y));
+  return c;
+}
+function measure(keep){
+  const r=view.getBoundingClientRect();
+  const cx=keep?(VW/2-cam.x)/cam.s:0, cy=keep?(VH/2-cam.y)/cam.s:0, rel=keep?cam.s/base:1;
+  VW=r.width;VH=r.height;if(!P)return;
+  base=Math.min(VW/P.w,VH/P.h);
+  minS=base;maxS=Math.max(base*4,Math.min(base*8,2.5));
+  if(keep){cam.s=base*rel;cam.x=VW/2-cx*cam.s;cam.y=VH/2-cy*cam.s}
+  else{
+    // arrancar llenando el alto o el ancho (lo que deje menos borde vacío)
+    const cover=Math.max(VW/P.w,VH/P.h);cam.s=Math.min(cover,base*1.6);cam.x=(VW-P.w*cam.s)/2;cam.y=(VH-P.h*cam.s)/2}
+  clampCam(cam);apply();
+}
+function animateTo(t,ms){
+  cancelAnimationFrame(anim);const f={...cam};t=clampCam({...t});const t0=performance.now();ms=ms||450;
+  const step=now=>{let k=Math.min(1,(now-t0)/ms);k=1-Math.pow(1-k,3);
+    cam.s=f.s+(t.s-f.s)*k;cam.x=f.x+(t.x-f.x)*k;cam.y=f.y+(t.y-f.y)*k;apply();if(k<1)anim=requestAnimationFrame(step)};
+  anim=requestAnimationFrame(step);
+}
+function zoomAt(px,py,ns,animate){
+  ns=Math.min(maxS,Math.max(minS,ns));const ix=(px-cam.x)/cam.s,iy=(py-cam.y)/cam.s;
+  const t={s:ns,x:px-ix*ns,y:py-iy*ns};if(animate)animateTo(t,260);else{Object.assign(cam,clampCam(t));apply()}
+}
+$('zin').onclick=()=>zoomAt(VW/2,VH/2,cam.s*1.6,true);
+$('zout').onclick=()=>zoomAt(VW/2,VH/2,cam.s/1.6,true);
+
+function boxPx(b){return{x:b[0]/100*P.w,y:b[1]/100*P.h,w:b[2]/100*P.w,h:b[3]/100*P.h}}
+function chipStyle(el,b){
+  const r=boxPx(b);const s=Math.max(r.w,r.h)*1.18;const left=r.x+r.w/2-s/2,top=r.y+r.h/2-s/2;
+  el.style.backgroundImage='url("img/'+P.id+'.webp")';
+  el.style.backgroundSize=(P.w/s*100)+'% auto';
+  el.style.backgroundPosition=(left/(P.w-s)*100)+'% '+(top/(P.h-s)*100)+'%';
+}
+function drawRing(it,bi,animate){
+  const r=boxPx(it.b[bi]);const pad=Math.max(r.w,r.h)*.12+P.w*.004;
+  const rx=r.w/2+pad,ry=r.h/2+pad,cx=r.x+r.w/2,cy=r.y+r.h/2,sw=Math.max(4,P.w*.0035);
+  const len=Math.PI*(3*(rx+ry)-Math.sqrt((3*rx+ry)*(rx+3*ry)));
+  const mk=cls=>{const e=document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+    e.setAttribute('cx',cx);e.setAttribute('cy',cy);e.setAttribute('rx',rx);e.setAttribute('ry',ry);
+    e.setAttribute('class',cls);e.style.strokeWidth=cls.includes('halo')?sw*2.2:sw;
+    e.style.strokeDasharray=len;e.style.setProperty('--len',len);if(!animate)e.style.animation='none';marks.appendChild(e)};
+  mk('ring halo');mk('ring');
+}
+function toast(t,good){const e=$('toast');e.textContent=t;e.className='toast on'+(good?' good':'');clearTimeout(e._t);e._t=setTimeout(()=>e.className='toast',1800)}
+
+function openPage(id){
+  P=PAGES.find(p=>p.id===id);if(!P){showHome();return}
+  $('home').hidden=true;$('game').hidden=false;$('win').hidden=true;
+  marks.innerHTML='';marks.setAttribute('width',P.w);marks.setAttribute('height',P.h);marks.setAttribute('viewBox','0 0 '+P.w+' '+P.h);
+  pic.width=P.w;pic.height=P.h;stage.style.width=P.w+'px';stage.style.height=P.h+'px';
+  $('loading').hidden=false;stage.style.visibility='hidden';
+  pic.onload=()=>{$('loading').hidden=true;stage.style.visibility='visible';measure(false)};
+  pic.src='img/'+P.id+'.webp';
+  tray.innerHTML='';
+  const F=found(P.id);
+  P.items.forEach((it,i)=>{
+    const c=document.createElement('button');c.type='button';c.className='chip'+(F.includes(i)?' found':'');
+    c.setAttribute('aria-label',label(it.n));c.title=label(it.n);chipStyle(c,it.b[0]);
+    c.onclick=()=>{audio();c.classList.remove('wig');void c.offsetWidth;c.classList.add('wig');
+      if(F.includes(i)){toast('¡'+label(it.n)+'!',true);say('¡Ya encontraste '+it.n+'!');}
+      else{toast('¿Dónde está '+it.n+'?');say('¿Dónde está '+it.n+'?');}};
+    tray.appendChild(c);
+    if(F.includes(i))drawRing(it,0,false);
+  });
+  $('cnt').textContent=F.length;$('cntMax').textContent=P.items.length;
+  layoutTray();measure(false);
+}
+function showHome(bk){P=null;$('game').hidden=true;$('win').hidden=true;$('home').hidden=false;renderHome(bk);stopConfetti();scrollTo(0,0)}
+function layoutTray(){
+  if(!P)return;const n=P.items.length,gap=8,pad=20,port=innerHeight>innerWidth;let cols,chip;
+  if(port){const rows=n>10?3:2;cols=Math.ceil(n/rows);chip=Math.min(80,(innerWidth-pad-gap*(cols-1))/cols)}
+  else{cols=n>10?3:2;const rows=Math.ceil(n/cols);chip=Math.min(84,(innerHeight-pad-gap*(rows-1))/rows)}
+  tray.style.setProperty('--chip',Math.floor(chip)+'px');tray.style.gridTemplateColumns='repeat('+cols+',var(--chip))';
+}
+
+function burst(px,py){
+  for(let k=0;k<9;k++){const e=document.createElement('div');e.className='burst';e.textContent='★';
+    const a=Math.random()*Math.PI*2,d=50+Math.random()*60;e.style.left=px-10+'px';e.style.top=py-14+'px';
+    e.style.setProperty('--dx',Math.cos(a)*d+'px');e.style.setProperty('--dy',Math.sin(a)*d+'px');
+    view.appendChild(e);setTimeout(()=>e.remove(),900)}
+}
+function tap(px,py){
+  if(!P)return;audio();
+  const ix=(px-cam.x)/cam.s,iy=(py-cam.y)/cam.s,pad=20/cam.s,F=found(P.id);
+  let best=null,bd=1e9;
+  P.items.forEach((it,i)=>it.b.forEach((b,bi)=>{const r=boxPx(b);
+    const dx=Math.max(r.x-ix,0,ix-(r.x+r.w)),dy=Math.max(r.y-iy,0,iy-(r.y+r.h)),d=Math.hypot(dx,dy);
+    if(d<=pad&&d<bd){bd=d;best={i,bi}}}));
+  if(best&&!F.includes(best.i)){
+    const it=P.items[best.i];F.push(best.i);save();
+    drawRing(it,best.bi,true);burst(px,py);sGood();
+    tray.children[best.i].classList.add('found');$('cnt').textContent=F.length;
+    toast('¡'+label(it.n)+'!',true);say('¡Muy bien! ¡'+it.n+'!');
+    if(F.length===P.items.length)setTimeout(win,1300);
+  }else if(best){burst(px,py)}
+  else{const m=document.createElement('div');m.className='miss';m.style.left=px+'px';m.style.top=py+'px';view.appendChild(m);setTimeout(()=>m.remove(),500);sMiss()}
+}
+let hintBusy=false;
+$('hintBtn').onclick=()=>{
+  if(!P||hintBusy)return;audio();const F=found(P.id);const left=P.items.map((_,i)=>i).filter(i=>!F.includes(i));if(!left.length)return;
+  const i=left[Math.floor(Math.random()*left.length)],it=P.items[i],r=boxPx(it.b[0]);
+  hintBusy=true;$('hintBtn').classList.add('wait');
+  const s=Math.min(maxS,Math.max(cam.s,base*2.2));
+  animateTo({s,x:VW/2-(r.x+r.w/2)*s,y:VH/2-(r.y+r.h/2)*s},600);
+  setTimeout(()=>{const e=document.createElementNS('http://www.w3.org/2000/svg','circle');const cx=r.x+r.w/2,cy=r.y+r.h/2;
+    e.setAttribute('cx',cx);e.setAttribute('cy',cy);e.setAttribute('r',Math.max(r.w,r.h)*.75+P.w*.01);e.setAttribute('class','pulse');
+    e.style.strokeWidth=Math.max(5,P.w*.005);e.style.transformOrigin=cx+'px '+cy+'px';marks.appendChild(e);
+    setTimeout(()=>{e.remove();hintBusy=false;$('hintBtn').classList.remove('wait')},3300)},450);
+  toast('Mirá por acá… ¿'+label(it.n)+'?');say('Mirá por acá. ¿Ves '+it.n+'?');
+  tray.children[i].classList.remove('wig');void tray.children[i].offsetWidth;tray.children[i].classList.add('wig');
+};
+$('backBtn').onclick=()=>{location.hash=P?'b-'+P.book.id:''};
+
+/* ---------- gestures ---------- */
+const pts=new Map();let g=null;
+view.addEventListener('pointerdown',e=>{
+  if(e.target.closest('button'))return;
+  view.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});cancelAnimationFrame(anim);
+  const r=view.getBoundingClientRect();
+  if(pts.size===1){g={mode:'pan',sx:e.clientX,sy:e.clientY,cx:cam.x,cy:cam.y,t:performance.now(),moved:false,multi:false,r}}
+  else if(pts.size===2&&g){const [a,b]=[...pts.values()];g.mode='pinch';g.multi=true;
+    g.d0=Math.hypot(a.x-b.x,a.y-b.y);g.s0=cam.s;g.mx=(a.x+b.x)/2-r.left;g.my=(a.y+b.y)/2-r.top;g.ix=(g.mx-cam.x)/cam.s;g.iy=(g.my-cam.y)/cam.s;g.r=r}
+});
+view.addEventListener('pointermove',e=>{
+  if(!pts.has(e.pointerId)||!g)return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(g.mode==='pan'&&pts.size===1){const dx=e.clientX-g.sx,dy=e.clientY-g.sy;
+    if(!g.moved&&Math.hypot(dx,dy)>9){g.moved=true;view.classList.add('drag')}
+    if(g.moved){cam.x=g.cx+dx;cam.y=g.cy+dy;clampCam(cam);apply()}}
+  else if(g.mode==='pinch'&&pts.size>=2){const [a,b]=[...pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);
+    const mx=(a.x+b.x)/2-g.r.left,my=(a.y+b.y)/2-g.r.top;cam.s=Math.min(maxS,Math.max(minS,g.s0*d/g.d0));
+    cam.x=mx-g.ix*cam.s;cam.y=my-g.iy*cam.s;clampCam(cam);apply()}
+});
+function up(e){
+  if(!pts.has(e.pointerId))return;pts.delete(e.pointerId);
+  if(!g)return;
+  if(pts.size===1){const [a]=[...pts.values()];g.mode='pan';g.sx=a.x;g.sy=a.y;g.cx=cam.x;g.cy=cam.y;g.moved=true}
+  else if(pts.size===0){view.classList.remove('drag');
+    if(e.type==='pointerup'&&!g.moved&&!g.multi&&performance.now()-g.t<600)tap(e.clientX-g.r.left,e.clientY-g.r.top);g=null}
+}
+view.addEventListener('pointerup',up);view.addEventListener('pointercancel',up);
+view.addEventListener('wheel',e=>{e.preventDefault();const r=view.getBoundingClientRect();zoomAt(e.clientX-r.left,e.clientY-r.top,cam.s*Math.exp(-e.deltaY*.0018))},{passive:false});
+['gesturestart','gesturechange'].forEach(t=>document.addEventListener(t,e=>e.preventDefault()));
+addEventListener('resize',()=>{if(P){layoutTray();requestAnimationFrame(()=>measure(true))}});
+
+/* ---------- win + confetti ---------- */
+let cf=null;
+function win(){sWin();say('¡Bravo! ¡Encontraste todo!');
+  $('winTitle').textContent='¡Encontraste las '+P.items.length+' cosas!';
+  $('nextBtn').hidden=P.num>=P.book.pages.length;$('win').hidden=false;confetti()}
+function confetti(){const c=$('confetti'),x=c.getContext('2d');c.width=innerWidth*devicePixelRatio;c.height=innerHeight*devicePixelRatio;x.scale(devicePixelRatio,devicePixelRatio);
+  const cols=['#ffd23f','#4fe3b0','#ff7b5c','#7aa8ff','#ff9ad5'];
+  const ps=Array.from({length:140},()=>({x:Math.random()*innerWidth,y:-20-Math.random()*innerHeight*.6,vx:(Math.random()-.5)*2,vy:2+Math.random()*3,r:Math.random()*6.3,vr:(Math.random()-.5)*.3,s:6+Math.random()*7,c:cols[Math.random()*5|0]}));
+  const t0=performance.now();
+  const f=now=>{x.clearRect(0,0,innerWidth,innerHeight);ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()});
+    if(now-t0<5000)cf=requestAnimationFrame(f);else x.clearRect(0,0,innerWidth,innerHeight)};
+  cancelAnimationFrame(cf);cf=requestAnimationFrame(f)}
+function stopConfetti(){cancelAnimationFrame(cf)}
+$('nextBtn').onclick=()=>{stopConfetti();location.hash='p-'+P.book.pages[P.num].id};
+$('homeBtn').onclick=()=>{location.hash='b-'+P.book.id};
+$('againBtn').onclick=()=>{if(!P)return;stopConfetti();prog[P.id]=[];save();openPage(P.id)};
+
+/* ---------- routing ---------- */
+function route(){const h=location.hash,m=h.match(/^#p-(\w+)$/),b=h.match(/^#b-([\w-]+)$/);
+  if(m)openPage(m[1]);else showHome(b?BOOKS.find(x=>x.id===b[1]):null)}
+addEventListener('hashchange',route);route();
+})();
+</script>
+
+</body>
+</html>
